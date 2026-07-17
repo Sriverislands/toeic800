@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TOEIC 800 - 8/23</title>
+<style>
+:root{--acc:#2563eb;--bg:#f4f6fa;--card:#fff;--txt:#1e293b;--sub:#64748b;--ok:#16a34a;--ng:#dc2626;--line:#e2e8f0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--txt);padding-bottom:70px}
+header{background:var(--acc);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+header h1{font-size:16px}
+#countdown{font-size:13px;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:12px}
+main{max-width:640px;margin:0 auto;padding:14px}
+.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{font-size:14px;color:var(--sub);margin-bottom:10px;font-weight:600}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:10}
+nav button{flex:1;padding:12px 0 14px;border:none;background:none;font-size:12px;color:var(--sub);cursor:pointer}
+nav button.act{color:var(--acc);font-weight:700}
+.tab{display:none}.tab.show{display:block}
+.big{font-size:28px;font-weight:700}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+.stat{text-align:center;padding:8px 0}
+.stat .n{font-size:22px;font-weight:700}
+.stat .l{font-size:11px;color:var(--sub)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:var(--acc);border-radius:4px;transition:width .3s}
+button.pri{width:100%;padding:14px;border:none;border-radius:10px;background:var(--acc);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+button.pri:disabled{background:#94a3b8}
+button.sec{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--txt);font-size:14px;cursor:pointer;margin-top:8px}
+#qWord{font-size:34px;font-weight:700;text-align:center;padding:26px 0 6px;letter-spacing:.5px}
+#qPos{text-align:center;color:var(--sub);font-size:13px;margin-bottom:16px}
+.choice{display:block;width:100%;padding:13px;margin-bottom:8px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-size:15px;text-align:left;cursor:pointer}
+.choice.ok{border-color:var(--ok);background:#f0fdf4}
+.choice.ng{border-color:var(--ng);background:#fef2f2}
+#qProg{font-size:12px;color:var(--sub);text-align:center;margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:#fff;color:var(--txt)}
+label{font-size:12px;color:var(--sub);display:block;margin:8px 0 4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--sub);font-weight:600;font-size:11px}
+.del{color:var(--ng);cursor:pointer;border:none;background:none;font-size:13px}
+.weak{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.weak b{font-weight:700}
+.weak span{color:var(--sub);font-size:13px;text-align:right;max-width:60%}
+.note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:8px}
+svg text{font-family:inherit}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#eff6ff;color:var(--acc);margin-left:6px}
+</style>
+</head>
+<body>
+<header><h1>TOEIC 800</h1><div id="countdown"></div></header>
+<main>
+
+<div id="tab-home" class="tab show">
+  <div class="card">
+    <h2>今日のノルマ</h2>
+    <div class="row">
+      <div class="stat"><div class="n" id="hNew">-</div><div class="l">新規単語</div><div class="bar"><div id="hNewBar"></div></div></div>
+      <div class="stat"><div class="n" id="hRev">-</div><div class="l">復習</div><div class="bar"><div id="hRevBar"></div></div></div>
+    </div>
+    <button class="pri" style="margin-top:10px" onclick="startQuiz()">単語学習を始める</button>
+  </div>
+  <div class="card">
+    <h2>学習状況</h2>
+    <div class="row">
+      <div class="stat"><div class="n" id="hStreak">0</div><div class="l">連続日数</div></div>
+      <div class="stat"><div class="n" id="hLearned">0</div><div class="l">学習済み語</div></div>
+      <div class="stat"><div class="n" id="hMaster">0</div><div class="l">定着語</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>苦手単語 (誤答2回以上)</h2>
+    <div id="hWeak"></div>
+  </div>
+  <div class="card">
+    <h2>直近の演習</h2>
+    <div id="hRecent"></div>
+  </div>
+</div>
+
+<div id="tab-quiz" class="tab">
+  <div class="card" id="quizBox">
+    <div id="qProg"></div>
+    <div id="qWord"></div>
+    <div id="qPos"></div>
+    <div id="qChoices"></div>
+  </div>
+</div>
+
+<div id="tab-rec" class="tab">
+  <div class="card">
+    <h2>演習を記録 (公式問題集など)</h2>
+    <label>日付</label><input type="date" id="rDate">
+    <div class="row">
+      <div><label>種別</label>
+        <select id="rPart">
+          <option>Part 1-2</option><option>Part 3</option><option>Part 4</option>
+          <option>Part 5</option><option>Part 6</option><option selected>Part 7</option>
+          <option>模試(L)</option><option>模試(R)</option><option>模試(全)</option>
+        </select></div>
+      <div><label>所要時間(分)</label><input type="number" id="rMin" min="0" inputmode="numeric"></div>
+    </div>
+    <div class="row">
+      <div><label>問題数</label><input type="number" id="rQ" min="1" inputmode="numeric"></div>
+      <div><label>正答数</label><input type="number" id="rC" min="0" inputmode="numeric"></div>
+    </div>
+    <label>メモ (教材名・気づき)</label><input type="text" id="rMemo" placeholder="公式11 Test1 など">
+    <button class="pri" style="margin-top:12px" onclick="addRec()">記録する</button>
+  </div>
+  <div class="card">
+    <h2>Part 7 の推移 (正答率% / 秒/問)</h2>
+    <div id="chart"></div>
+    <div class="note">青=正答率%(目標85%) 橙=1問あたり秒(目標60秒以下)</div>
+  </div>
+  <div class="card">
+    <h2>記録一覧</h2>
+    <table><thead><tr><th>日付</th><th>種別</th><th>正答</th><th>率</th><th>秒/問</th><th></th></tr></thead><tbody id="recBody"></tbody></table>
+  </div>
+</div>
+
+<div id="tab-data" class="tab">
+  <div class="card">
+    <h2>Google同期 (自動)</h2>
+    <div id="syncStatus" class="note">読み込み中...</div>
+    <button class="pri" id="syncBtn" style="margin-top:10px" onclick="syncAction()">Googleでログイン</button>
+  </div>
+  <div class="card">
+    <h2>バックアップ (手動)</h2>
+    <div class="note">Google同期を使わない場合や、バックアップを残したい場合に使います。</div>
+    <button class="pri" style="margin-top:12px" onclick="exportData()">データを書き出す (ファイル保存)</button>
+    <button class="sec" onclick="copyData()">クリップボードにコピー</button>
+    <label style="margin-top:14px">読み込み (ファイル)</label>
+    <input type="file" id="impFile" accept=".json" onchange="importFile(this)">
+    <label>読み込み (貼り付け)</label>
+    <textarea id="impText" rows="3" placeholder="書き出したJSONを貼り付け"></textarea>
+    <button class="sec" onclick="importText()">貼り付けたデータを読み込む</button>
+  </div>
+  <div class="card">
+    <h2>設定</h2>
+    <label>1日の新規単語数</label>
+    <input type="number" id="setDaily" min="5" max="50" onchange="setDaily(this.value)">
+    <div class="note">収録 <span id="totalWords"></span>語。8/23までに全語を1周するには残り日数で割った数以上に設定。</div>
+    <button class="sec" style="color:var(--ng);margin-top:14px" onclick="resetAll()">全データを初期化</button>
+  </div>
+</div>
+
+</main>
+<nav>
+  <button id="nav-home" class="act" onclick="showTab('home')">ホーム</button>
+  <button id="nav-quiz" onclick="showTab('quiz');startQuiz()">単語</button>
+  <button id="nav-rec" onclick="showTab('rec')">記録</button>
+  <button id="nav-data" onclick="showTab('data')">データ</button>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+"use strict";
+// ===== Firebase設定 (Firebaseコンソールで取得したfirebaseConfigをここに貼る) =====
+const FB_CONFIG=null;
+// ===== 語彙データ [語, 品詞, 意味] =====
+const DATA=[
+["comply","動","(規則・要求に)従う (comply with)"],
+["implement","動","〜を実施する・導入する"],
+["reimburse","動","〜を払い戻す・返金する"],
+["expedite","動","〜を早める・迅速に処理する"],
+["streamline","動","〜を合理化・効率化する"],
+["consolidate","動","〜を統合する・強化する"],
+["delegate","動","(権限・仕事を)委任する"],
+["designate","動","〜を指定する・任命する"],
+["distribute","動","〜を配布する・流通させる"],
+["enclose","動","〜を同封する"],
+["endorse","動","〜を支持する・推奨する"],
+["enhance","動","〜を高める・向上させる"],
+["evaluate","動","〜を評価する・査定する"],
+["exceed","動","〜を超える・上回る"],
+["facilitate","動","〜を促進する・容易にする"],
+["finalize","動","〜を最終決定する・仕上げる"],
+["illustrate","動","〜を(例で)説明する"],
+["indicate","動","〜を示す・指摘する"],
+["inspect","動","〜を検査する・点検する"],
+["merge","動","合併する・統合する"],
+["modify","動","〜を修正・変更する"],
+["negotiate","動","交渉する"],
+["notify","動","〜に通知する (notify A of B)"],
+["obtain","動","〜を入手する・獲得する"],
+["oversee","動","〜を監督する"],
+["postpone","動","〜を延期する"],
+["proceed","動","進む・続行する (proceed to)"],
+["prohibit","動","〜を禁止する"],
+["redeem","動","(クーポン等を)使う・換金する"],
+["refrain","動","控える (refrain from -ing)"],
+["reinforce","動","〜を強化・補強する"],
+["relocate","動","移転する・転勤させる"],
+["renew","動","〜を更新する"],
+["renovate","動","〜を改装・改修する"],
+["resolve","動","〜を解決する・決議する"],
+["restore","動","〜を復旧・修復する"],
+["resume","動","〜を再開する"],
+["retain","動","〜を保持する・維持する"],
+["retrieve","動","〜を取り戻す・検索する"],
+["revise","動","〜を改訂・修正する"],
+["solicit","動","(意見・寄付を)求める"],
+["specify","動","〜を明記・指定する"],
+["submit","動","〜を提出する"],
+["subscribe","動","定期購読する (subscribe to)"],
+["supervise","動","〜を監督・管理する"],
+["suspend","動","〜を一時停止・中断する"],
+["terminate","動","〜を終了・解除する"],
+["undergo","動","(検査・変化を)受ける・経験する"],
+["utilize","動","〜を活用する"],
+["verify","動","〜を確認・検証する"],
+["waive","動","(権利・料金を)放棄する・免除する"],
+["withdraw","動","〜を引き出す・撤回する"],
+["accommodate","動","〜を収容する・(要望に)応じる"],
+["acknowledge","動","〜を認める・(受領を)知らせる"],
+["acquire","動","〜を取得・買収する"],
+["adjourn","動","(会議を)休会・延期する"],
+["administer","動","〜を管理・運営する"],
+["allocate","動","〜を割り当てる・配分する"],
+["amend","動","〜を修正・改正する"],
+["anticipate","動","〜を予期・予想する"],
+["appoint","動","〜を任命する"],
+["assemble","動","〜を組み立てる・集める"],
+["assess","動","〜を評価・査定する"],
+["assign","動","〜を割り当てる・任命する"],
+["attain","動","〜を達成・獲得する"],
+["attribute","動","〜のせいにする (attribute A to B)"],
+["authorize","動","〜を許可・承認する"],
+["compensate","動","補償する (compensate for)"],
+["compile","動","〜をまとめる・編集する"],
+["coordinate","動","〜を調整する"],
+["dispatch","動","〜を発送・派遣する"],
+["donate","動","〜を寄付する"],
+["draft","動","〜を起草する・下書きする"],
+["emphasize","動","〜を強調する"],
+["enroll","動","登録する・入会する (enroll in)"],
+["ensure","動","〜を確実にする・保証する"],
+["establish","動","〜を設立・確立する"],
+["estimate","動","〜を見積もる"],
+["expand","動","〜を拡大する"],
+["expire","動","期限が切れる"],
+["extend","動","〜を延長する・広げる"],
+["feature","動","〜を特集する・呼び物にする"],
+["forward","動","〜を転送する"],
+["found","動","〜を設立する"],
+["generate","動","〜を生み出す・発生させる"],
+["grant","動","〜を与える・許可する"],
+["handle","動","〜を扱う・処理する"],
+["honor","動","(約束・割引を)守る・有効と認める"],
+["identify","動","〜を特定する・確認する"],
+["issue","動","〜を発行・支給する"],
+["launch","動","〜を開始する・発売する"],
+["locate","動","〜の場所を特定する / be located 位置する"],
+["mandate","動","〜を義務づける"],
+["monitor","動","〜を監視・観察する"],
+["nominate","動","〜を推薦・指名する"],
+["operate","動","〜を操作する・営業する"],
+["outline","動","〜の概要を述べる"],
+["participate","動","参加する (participate in)"],
+["praise","動","〜を称賛する"],
+["prioritize","動","〜を優先する"],
+["promote","動","〜を昇進させる・促進する"],
+["publicize","動","〜を宣伝・公表する"],
+["purchase","動","〜を購入する"],
+["recruit","動","〜を採用・募集する"],
+["register","動","登録する (register for)"],
+["reschedule","動","〜の日程を変更する"],
+["restrict","動","〜を制限する"],
+["seek","動","〜を求める・探す"],
+["ship","動","〜を発送・出荷する"],
+["secure","動","〜を確保する・固定する"],
+["transfer","動","〜を移動・転勤・送金する"],
+["update","動","〜を更新する・最新情報を伝える"],
+["upgrade","動","〜を格上げ・改良する"],
+["agenda","名","議題・協議事項"],
+["allowance","名","手当・支給額"],
+["amendment","名","修正・改正(案)"],
+["applicant","名","応募者・志願者"],
+["appraisal","名","評価・査定"],
+["asset","名","資産・財産・強み"],
+["attendance","名","出席・出席者数"],
+["audit","名","会計監査"],
+["banquet","名","宴会・祝宴"],
+["beverage","名","飲み物"],
+["bid","名","入札・入札額"],
+["brochure","名","パンフレット"],
+["bulk","名","大量 (in bulk 大量に)"],
+["candidate","名","候補者・志願者"],
+["capacity","名","収容力・能力・定員"],
+["certificate","名","証明書・修了証"],
+["clause","名","(契約の)条項"],
+["colleague","名","同僚"],
+["commitment","名","約束・献身・責務"],
+["complaint","名","苦情・不満"],
+["compliance","名","(規則の)順守"],
+["component","名","部品・構成要素"],
+["compromise","名","妥協・折衷案"],
+["congestion","名","混雑・渋滞"],
+["consent","名","同意・承諾"],
+["contractor","名","請負業者"],
+["courier","名","宅配便・配達人"],
+["coverage","名","補償(範囲)・報道"],
+["criteria","名","基準 (criterionの複数形)"],
+["deadline","名","締め切り・期限"],
+["deduction","名","控除・差し引き"],
+["defect","名","欠陥・不具合"],
+["demolition","名","(建物の)取り壊し"],
+["deposit","名","頭金・保証金・預金"],
+["directory","名","名簿・住所録"],
+["dividend","名","配当金"],
+["duration","名","継続期間"],
+["endeavor","名","努力・試み"],
+["enrollment","名","登録・入会(者数)"],
+["excerpt","名","抜粋"],
+["expenditure","名","支出・経費"],
+["expertise","名","専門知識・専門技術"],
+["extension","名","延長・内線"],
+["fare","名","運賃"],
+["feasibility","名","実現可能性"],
+["fluctuation","名","変動"],
+["fund","名","資金・基金"],
+["inventory","名","在庫・棚卸し"],
+["invoice","名","請求書・送り状"],
+["itinerary","名","旅程(表)"],
+["landmark","名","目印・画期的な出来事"],
+["lease","名","賃貸借契約"],
+["luncheon","名","昼食会"],
+["maintenance","名","保守・整備"],
+["malfunction","名","故障・不調"],
+["merchandise","名","商品"],
+["merger","名","(企業の)合併"],
+["outage","名","停電・供給停止"],
+["patron","名","常連客・後援者"],
+["payroll","名","給与支払い(名簿)"],
+["pharmaceutical","名","製薬・医薬品(の)"],
+["physician","名","内科医・医師"],
+["precaution","名","予防措置・用心"],
+["premises","名","構内・敷地・建物"],
+["procedure","名","手順・手続き"],
+["proceeds","名","収益(金)"],
+["productivity","名","生産性"],
+["proximity","名","近いこと (in proximity to)"],
+["questionnaire","名","アンケート"],
+["quota","名","ノルマ・割当量"],
+["quote","名","見積もり(額) (=quotation)"],
+["receipt","名","領収書・受領"],
+["reception","名","歓迎会・受付・受信"],
+["referral","名","紹介・推薦"],
+["refreshments","名","軽食・茶菓"],
+["refund","名","返金・払い戻し"],
+["reminder","名","念押しの通知・督促状"],
+["renovation","名","改装・改修"],
+["representative","名","担当者・代表者"],
+["reputation","名","評判・名声"],
+["requirement","名","要件・必要条件"],
+["retailer","名","小売業者"],
+["revenue","名","収益・歳入"],
+["shortage","名","不足"],
+["subsidiary","名","子会社"],
+["successor","名","後任者・後継者"],
+["supplier","名","供給業者・納入業者"],
+["testimonial","名","推薦文・顧客の声"],
+["transaction","名","取引"],
+["transition","名","移行・変遷"],
+["turnout","名","参加者数・投票率"],
+["turnover","名","離職率・売上高"],
+["vendor","名","販売業者・売り手"],
+["venue","名","会場・開催地"],
+["voucher","名","クーポン券・引換券"],
+["warehouse","名","倉庫"],
+["warranty","名","保証(書)"],
+["workload","名","仕事量・作業負荷"],
+["adjacent","形","隣接した (adjacent to)"],
+["adequate","形","十分な・適切な"],
+["affordable","形","手頃な価格の"],
+["ample","形","十分な・豊富な"],
+["annual","形","年1回の・年間の"],
+["applicable","形","適用される・該当する"],
+["attentive","形","注意深い・気配りのある"],
+["authentic","形","本物の・正真正銘の"],
+["beneficial","形","有益な"],
+["cautious","形","慎重な"],
+["competent","形","有能な"],
+["competitive","形","競争力のある・(価格が)他に負けない"],
+["complimentary","形","無料の・称賛の"],
+["comprehensive","形","包括的な・総合的な"],
+["confidential","形","機密の"],
+["consecutive","形","連続した"],
+["considerable","形","かなりの・相当な"],
+["consistent","形","一貫した (consistent with)"],
+["contemporary","形","現代の・同時代の"],
+["cordial","形","心のこもった・友好的な"],
+["courteous","形","礼儀正しい"],
+["crucial","形","極めて重要な"],
+["dedicated","形","献身的な・専用の"],
+["defective","形","欠陥のある"],
+["diligent","形","勤勉な"],
+["distinguished","形","著名な・際立った"],
+["diverse","形","多様な"],
+["durable","形","耐久性のある"],
+["eligible","形","資格のある (eligible for)"],
+["exceptional","形","並外れた・例外的な"],
+["exclusive","形","独占的な・会員限定の"],
+["exempt","形","免除された (exempt from)"],
+["extensive","形","広範囲の・大規模な"],
+["faulty","形","欠陥のある"],
+["feasible","形","実現可能な"],
+["fragile","形","壊れやすい"],
+["generic","形","一般的な・ノーブランドの"],
+["impending","形","差し迫った"],
+["imperative","形","必須の・急を要する"],
+["informative","形","有益な・情報に富む"],
+["initial","形","最初の"],
+["innovative","形","革新的な"],
+["integral","形","不可欠な (integral to)"],
+["interim","形","暫定の・仮の"],
+["lucrative","形","もうかる・利益の大きい"],
+["mandatory","形","義務的な・必須の"],
+["numerous","形","多数の"],
+["obsolete","形","時代遅れの・廃れた"],
+["ongoing","形","進行中の"],
+["outstanding","形","傑出した / 未払いの"],
+["overdue","形","期限を過ぎた・延滞の"],
+["perishable","形","腐りやすい"],
+["pending","形","保留中の・未定の"],
+["preliminary","形","予備の・準備段階の"],
+["proficient","形","熟達した (proficient in)"],
+["promising","形","前途有望な"],
+["prompt","形","迅速な"],
+["prospective","形","見込みのある・将来の"],
+["provisional","形","暫定的な・仮の"],
+["punctual","形","時間を守る"],
+["redeemable","形","(クーポンが)引き換え可能な"],
+["redundant","形","余分な・重複した"],
+["relevant","形","関連のある (relevant to)"],
+["reliable","形","信頼できる"],
+["reluctant","形","気が進まない (reluctant to)"],
+["renowned","形","有名な (renowned for)"],
+["respective","形","それぞれの"],
+["seasoned","形","経験豊富な"],
+["significant","形","重要な・かなりの"],
+["spacious","形","広々とした"],
+["state-of-the-art","形","最新式の"],
+["subsequent","形","その後の・次の"],
+["substantial","形","相当な・かなりの"],
+["sufficient","形","十分な"],
+["tentative","形","仮の・暫定的な"],
+["thorough","形","徹底的な・綿密な"],
+["unanimous","形","満場一致の"],
+["upcoming","形","来たるべき・今度の"],
+["valid","形","有効な"],
+["versatile","形","多用途の・多才な"],
+["vulnerable","形","脆弱な (vulnerable to)"],
+["accordingly","副","それに応じて・従って"],
+["approximately","副","およそ"],
+["consequently","副","その結果"],
+["considerably","副","かなり・相当に"],
+["currently","副","現在は"],
+["drastically","副","大幅に・劇的に"],
+["exclusively","副","独占的に・もっぱら"],
+["formerly","副","以前は"],
+["immediately","副","直ちに"],
+["markedly","副","著しく"],
+["meanwhile","副","その間に・一方で"],
+["momentarily","副","すぐに・一瞬"],
+["mutually","副","相互に"],
+["notably","副","特に・著しく"],
+["otherwise","副","さもなければ・その他の点では"],
+["periodically","副","定期的に"],
+["promptly","副","速やかに・時間通りに"],
+["respectively","副","それぞれ"],
+["shortly","副","まもなく"],
+["significantly","副","大幅に・著しく"],
+["simultaneously","副","同時に"],
+["subsequently","副","その後"],
+["tentatively","副","仮に・暫定的に"],
+["thoroughly","副","徹底的に"],
+["unanimously","副","満場一致で"],
+["be subject to","熟","〜の対象となる・〜を受けやすい"],
+["in a timely manner","熟","タイミングよく・遅滞なく"],
+["on behalf of","熟","〜を代表して・〜の代わりに"],
+["prior to","熟","〜より前に"],
+["in accordance with","熟","〜に従って"],
+["in observance of","熟","〜を祝って・〜の休日のため"],
+["in the event of","熟","〜の場合には"],
+["no later than","熟","〜までに(期限)"],
+["on short notice","熟","急な知らせで・直前の通知で"],
+["out of stock","熟","在庫切れで"],
+["take effect","熟","(法・規則が)発効する"],
+["take inventory","熟","棚卸しをする"],
+["in advance","熟","前もって"],
+["free of charge","熟","無料で"],
+["as of","熟","〜の時点で・〜以降"],
+["in bulk","熟","大量に・まとめて"],
+["upon request","熟","要望に応じて"],
+["at one's earliest convenience","熟","都合がつき次第"],
+["due to","熟","〜が原因で"],
+["with regard to","熟","〜に関して"],
+["provided that","熟","〜という条件で"],
+["in charge of","熟","〜を担当して"],
+["comply with regulations","熟","規則を順守する"],
+["meet the deadline","熟","締め切りに間に合わせる"],
+["place an order","熟","注文する"],
+["accountant","名","会計士・経理担当者"],
+["accommodation","名","宿泊施設"],
+["acquisition","名","買収・取得"],
+["administration","名","管理・運営・政権"],
+["anniversary","名","記念日・周年"],
+["apprentice","名","見習い・実習生"],
+["architect","名","建築家"],
+["assembly","名","組み立て・集会"],
+["assignment","名","任務・課題"],
+["assumption","名","想定・前提"],
+["authorization","名","許可・承認"],
+["boardroom","名","役員会議室"],
+["cafeteria","名","社員食堂"],
+["circulation","名","発行部数・循環"],
+["commission","名","手数料・委員会"],
+["committee","名","委員会"],
+["commute","名","通勤 (動:通勤する)"],
+["confirmation","名","確認・確認書"],
+["consumption","名","消費"],
+["convention","名","大会・総会・慣習"],
+["copier","名","コピー機"],
+["correspondence","名","文書のやり取り・通信"],
+["council","名","評議会・議会"],
+["craftsmanship","名","職人技"],
+["cuisine","名","料理・料理法"],
+["curator","名","学芸員・館長"],
+["customs","名","税関・関税"],
+["delegation","名","代表団・委任"],
+["destination","名","目的地"],
+["detour","名","迂回(路)"],
+["diagnosis","名","診断"],
+["distributor","名","販売代理店・卸売業者"],
+["evaluation","名","評価"],
+["exposition","名","博覧会 (=expo)"],
+["florist","名","花屋"],
+["forecast","名","予測・予報"],
+["headquarters","名","本社・本部"],
+["initiative","名","新たな取り組み・主導権"],
+["inquiry","名","問い合わせ"],
+["installment","名","分割払いの1回分・連載の1回"],
+["institution","名","機関・施設"],
+["intersection","名","交差点"],
+["janitor","名","管理人・清掃員"],
+["keynote","名","基調(講演) (keynote speech)"],
+["laboratory","名","研究室・実験室"],
+["landlord","名","家主・大家"],
+["ledger","名","会計元帳"],
+["logistics","名","物流・手配"],
+["mortgage","名","住宅ローン・抵当"],
+["nutrition","名","栄養"],
+["obligation","名","義務"],
+["occupant","名","居住者・占有者"],
+["opening","名","欠員・空き・開店"],
+["orientation","名","新人研修・説明会"],
+["overhaul","名","総点検・全面見直し"],
+["paperwork","名","事務処理・書類仕事"],
+["pedestrian","名","歩行者"],
+["pension","名","年金"],
+["personnel","名","職員・人事(部)"],
+["postage","名","郵便料金"],
+["proponent","名","支持者・提唱者"],
+["prescription","名","処方箋"],
+["publicity","名","宣伝・広報・評判"],
+["real estate","名","不動産"],
+["recipient","名","受取人・受賞者"],
+["recognition","名","評価・表彰・認識"],
+["recession","名","景気後退・不況"],
+["reference","名","照会先・推薦(状)・参照"],
+["removal","名","撤去・除去"],
+["resignation","名","辞職・辞表"],
+["specification","名","仕様(書)"],
+["stationery","名","文房具"],
+["subscription","名","定期購読(料)"],
+["surcharge","名","追加料金"],
+["tariff","名","関税"],
+["tenant","名","賃借人・テナント"],
+["utility","名","公共料金・公益事業"],
+["withdrawal","名","引き出し・撤退"],
+["adhere","動","付着する・(規則を)順守する (adhere to)"],
+["alleviate","動","〜を緩和・軽減する"],
+["boost","動","〜を押し上げる・促進する"],
+["broaden","動","〜を広げる"],
+["clarify","動","〜を明確にする"],
+["commence","動","〜を開始する"],
+["commend","動","〜を称賛する"],
+["conserve","動","〜を節約・保護する"],
+["convene","動","(会議を)招集する・集まる"],
+["convert","動","〜を転換・改装する (convert A into B)"],
+["dedicate","動","〜を捧げる (be dedicated to)"],
+["deteriorate","動","悪化する"],
+["devise","動","〜を考案する"],
+["diagnose","動","〜を診断する"],
+["disrupt","動","〜を混乱させる・中断させる"],
+["duplicate","動","〜を複製する"],
+["embark","動","乗り出す・着手する (embark on)"],
+["encounter","動","〜に遭遇する"],
+["envision","動","〜を思い描く・想定する"],
+["exhibit","動","〜を展示する"],
+["incur","動","(費用・損失を)負う・被る"],
+["install","動","〜を設置・インストールする"],
+["intend","動","〜するつもりである (intend to)"],
+["mentor","動","〜を指導する (名:指導者)"],
+["offset","動","〜を相殺する"],
+["overwhelm","動","〜を圧倒する"],
+["prolong","動","〜を延長する"],
+["surpass","動","〜を上回る・しのぐ"],
+["undertake","動","〜を引き受ける・着手する"],
+["unveil","動","〜を発表する・公開する"],
+];
+// ===== 状態 =====
+const KEY="toeic800v1";
+const EXAM="2026-08-23";
+const INTERVALS=[0,1,3,7,14,30];
+let S=load();
+function init(){return{words:{},log:{},records:[],daily:15}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));return d&&d.words?Object.assign(init(),d):init()}catch(e){return init()}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}queuePush()}
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(ds,n){const d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function logToday(){const t=today();if(!S.log[t])S.log[t]={nw:0,rv:0,ok:0,tot:0};return S.log[t]}
+// ===== タブ =====
+function showTab(n){document.querySelectorAll(".tab").forEach(e=>e.classList.remove("show"));document.querySelectorAll("nav button").forEach(e=>e.classList.remove("act"));document.getElementById("tab-"+n).classList.add("show");document.getElementById("nav-"+n).classList.add("act");if(n==="home")renderHome();if(n==="rec")renderRec();if(n==="data")renderData();window.scrollTo(0,0)}
+// ===== ホーム =====
+function dueList(){const t=today();return Object.keys(S.words).filter(i=>S.words[i].box>=1&&S.words[i].due<=t)}
+function newList(){return DATA.map((_,i)=>String(i)).filter(i=>!S.words[i])}
+function renderHome(){
+  const lg=logToday(),due=dueList(),newQuota=S.daily;
+  const nwDone=lg.nw,rvTotal=due.length+lg.rv;
+  document.getElementById("hNew").textContent=nwDone+" / "+newQuota;
+  document.getElementById("hRev").textContent=lg.rv+" / "+rvTotal;
+  document.getElementById("hNewBar").style.width=Math.min(100,newQuota?nwDone/newQuota*100:0)+"%";
+  document.getElementById("hRevBar").style.width=Math.min(100,rvTotal?lg.rv/rvTotal*100:0)+"%";
+  let streak=0,d=today();
+  if(!S.log[d]||S.log[d].tot===0)d=addDays(d,-1);
+  while(S.log[d]&&S.log[d].tot>0){streak++;d=addDays(d,-1)}
+  document.getElementById("hStreak").textContent=streak;
+  const ws=Object.values(S.words);
+  document.getElementById("hLearned").textContent=Object.keys(S.words).length;
+  document.getElementById("hMaster").textContent=ws.filter(w=>w.box>=4).length;
+  const weak=Object.keys(S.words).filter(i=>S.words[i].wrong>=2).sort((a,b)=>S.words[b].wrong-S.words[a].wrong).slice(0,10);
+  document.getElementById("hWeak").innerHTML=weak.length?weak.map(i=>'<div class="weak"><b>'+DATA[i][0]+'</b><span>'+DATA[i][2]+' <em style="color:var(--ng);font-style:normal">×'+S.words[i].wrong+'</em></span></div>').join(""):'<div class="note">まだありません</div>';
+  const rec=S.records.slice(-3).reverse();
+  document.getElementById("hRecent").innerHTML=rec.length?rec.map(r=>'<div class="weak"><b>'+r.d.slice(5)+' '+r.part+'</b><span>'+r.c+'/'+r.q+' ('+Math.round(r.c/r.q*100)+'%)'+(r.min?' '+Math.round(r.min*60/r.q)+'秒/問':'')+'</span></div>').join(""):'<div class="note">記録タブから公式問題集の演習結果を入力してください</div>';
+}
+// ===== クイズ =====
+let queue=[],qi=0,sessionOK=0,answered=false;
+function startQuiz(){
+  showTabQuizOnly();
+  const lg=logToday();
+  const due=shuffle(dueList());
+  const remainNew=Math.max(0,S.daily-lg.nw);
+  const nw=newList().slice(0,remainNew);
+  queue=due.concat(nw);qi=0;sessionOK=0;
+  if(queue.length===0){endScreen("今日のノルマは完了しています。",true);return}
+  showQ();
+}
+function showTabQuizOnly(){document.querySelectorAll(".tab").forEach(e=>e.classList.remove("show"));document.querySelectorAll("nav button").forEach(e=>e.classList.remove("act"));document.getElementById("tab-quiz").classList.add("show");document.getElementById("nav-quiz").classList.add("act")}
+function showQ(){
+  answered=false;
+  const i=queue[qi],w=DATA[i];
+  document.getElementById("qProg").textContent=(qi+1)+" / "+queue.length+(S.words[i]?"　復習":"　新規");
+  document.getElementById("qWord").textContent=w[0];
+  document.getElementById("qPos").textContent="["+w[1]+"]";
+  const pool=DATA.filter((x,j)=>String(j)!==i&&x[1]===w[1]);
+  const ds=shuffle(pool.slice()).slice(0,3).map(x=>x[2]);
+  const opts=shuffle([w[2]].concat(ds));
+  document.getElementById("qChoices").innerHTML=opts.map(o=>'<button class="choice" onclick="pick(this)">'+o+'</button>').join("");
+}
+function pick(btn){
+  if(answered)return;answered=true;
+  const i=queue[qi],w=DATA[i],correct=btn.textContent===w[2];
+  document.querySelectorAll(".choice").forEach(b=>{if(b.textContent===w[2])b.classList.add("ok")});
+  if(!correct)btn.classList.add("ng");
+  const lg=logToday();
+  const isNew=!S.words[i];
+  if(isNew){S.words[i]={box:1,due:addDays(today(),1),wrong:0};lg.nw++}
+  else{
+    const st=S.words[i];lg.rv++;
+    if(correct){st.box=Math.min(5,st.box+1)}else{st.box=1;st.wrong++}
+    st.due=addDays(today(),INTERVALS[st.box]);
+  }
+  if(!correct&&isNew){S.words[i].wrong++}
+  lg.tot++;if(correct){lg.ok++;sessionOK++}
+  save();
+  setTimeout(next,correct?600:1500);
+}
+function next(){qi++;if(qi>=queue.length){endScreen("セッション完了: "+sessionOK+" / "+queue.length+" 正解",false)}else{showQ()}}
+function endScreen(msg,done){
+  document.getElementById("qProg").textContent="";
+  document.getElementById("qWord").textContent=done?"✓":"お疲れさまでした";
+  document.getElementById("qWord").style.fontSize="22px";
+  document.getElementById("qPos").textContent=msg;
+  document.getElementById("qChoices").innerHTML='<button class="pri" onclick="startQuiz()">続けて学習する</button><button class="sec" onclick="showTab(\'home\')">ホームへ戻る</button>';
+}
+// ===== 記録 =====
+function addRec(){
+  const d=document.getElementById("rDate").value||today();
+  const part=document.getElementById("rPart").value;
+  const q=parseInt(document.getElementById("rQ").value),c=parseInt(document.getElementById("rC").value);
+  const min=parseFloat(document.getElementById("rMin").value)||0;
+  const memo=document.getElementById("rMemo").value;
+  if(!q||isNaN(c)||c>q){alert("問題数と正答数を確認してください");return}
+  S.records.push({d,part,q,c,min,memo});
+  S.records.sort((a,b)=>a.d<b.d?-1:1);
+  save();
+  document.getElementById("rQ").value="";document.getElementById("rC").value="";document.getElementById("rMin").value="";document.getElementById("rMemo").value="";
+  renderRec();
+}
+function delRec(i){if(confirm("この記録を削除しますか")){S.records.splice(i,1);save();renderRec()}}
+function renderRec(){
+  document.getElementById("rDate").value=today();
+  const tb=document.getElementById("recBody");
+  tb.innerHTML=S.records.map((r,i)=>'<tr><td>'+r.d.slice(5)+'</td><td>'+r.part+(r.memo?'<span class="pill">'+r.memo+'</span>':'')+'</td><td>'+r.c+'/'+r.q+'</td><td>'+Math.round(r.c/r.q*100)+'%</td><td>'+(r.min?Math.round(r.min*60/r.q):"-")+'</td><td><button class="del" onclick="delRec('+i+')">削除</button></td></tr>').reverse().join("");
+  drawChart();
+}
+function drawChart(){
+  const el=document.getElementById("chart");
+  const p7=S.records.filter(r=>r.part==="Part 7");
+  if(p7.length<2){el.innerHTML='<div class="note">Part 7の記録が2件以上で表示されます</div>';return}
+  const W=600,H=200,pad=30;
+  const n=p7.length,x=i=>pad+i*(W-2*pad)/(n-1);
+  const acc=p7.map(r=>r.c/r.q*100);
+  const spd=p7.map(r=>r.min?r.min*60/r.q:null);
+  const yA=v=>H-pad-(v/100)*(H-2*pad);
+  const maxS=Math.max(90,...spd.filter(v=>v!=null));
+  const yS=v=>H-pad-(v/maxS)*(H-2*pad);
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%">';
+  svg+='<line x1="'+pad+'" y1="'+yA(85)+'" x2="'+(W-pad)+'" y2="'+yA(85)+'" stroke="#16a34a" stroke-dasharray="4" stroke-width="1"/>';
+  svg+='<text x="'+(W-pad)+'" y="'+(yA(85)-4)+'" font-size="10" fill="#16a34a" text-anchor="end">85%</text>';
+  svg+='<polyline fill="none" stroke="#2563eb" stroke-width="2" points="'+acc.map((v,i)=>x(i)+","+yA(v)).join(" ")+'"/>';
+  acc.forEach((v,i)=>{svg+='<circle cx="'+x(i)+'" cy="'+yA(v)+'" r="3" fill="#2563eb"/><text x="'+x(i)+'" y="'+(yA(v)-7)+'" font-size="10" fill="#2563eb" text-anchor="middle">'+Math.round(v)+'</text>'});
+  const sp=spd.map((v,i)=>v!=null?x(i)+","+yS(v):null).filter(Boolean);
+  if(sp.length>1){svg+='<polyline fill="none" stroke="#ea580c" stroke-width="2" stroke-dasharray="5" points="'+sp.join(" ")+'"/>';
+    spd.forEach((v,i)=>{if(v!=null)svg+='<circle cx="'+x(i)+'" cy="'+yS(v)+'" r="3" fill="#ea580c"/><text x="'+x(i)+'" y="'+(yS(v)+14)+'" font-size="10" fill="#ea580c" text-anchor="middle">'+Math.round(v)+'</text>'})}
+  p7.forEach((r,i)=>{svg+='<text x="'+x(i)+'" y="'+(H-8)+'" font-size="9" fill="#64748b" text-anchor="middle">'+r.d.slice(5)+'</text>'});
+  svg+='</svg>';
+  el.innerHTML=svg;
+}
+// ===== Google同期 (Firebase) =====
+let fbUser=null,fbDb=null,syncTimer=null,lastSync=null;
+function fbReady(){return FB_CONFIG&&typeof firebase!=="undefined"}
+function fbInit(){
+  if(!fbReady())return;
+  try{
+    firebase.initializeApp(FB_CONFIG);
+    fbDb=firebase.firestore();
+    firebase.auth().onAuthStateChanged(u=>{fbUser=u;renderSync();if(u)pullMerge()});
+  }catch(e){console.error(e)}
+}
+function syncAction(){
+  if(!fbReady()){alert("同期は未設定です。Firebaseの設定値の組み込みが必要です。");return}
+  if(fbUser){if(confirm("ログアウトしますか?(この端末のデータは残ります)"))firebase.auth().signOut()}
+  else{
+    const p=new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(p).catch(()=>firebase.auth().signInWithRedirect(p));
+  }
+}
+function mergeState(a,b){
+  if(!b||!b.words)return a;
+  const m=init();m.daily=a.daily||b.daily||15;
+  new Set(Object.keys(a.words).concat(Object.keys(b.words))).forEach(k=>{
+    const x=a.words[k],y=b.words[k];
+    if(!x){m.words[k]=y}else if(!y){m.words[k]=x}
+    else{const w=x.due>=y.due?x:y;m.words[k]={box:w.box,due:w.due,wrong:Math.max(x.wrong||0,y.wrong||0)}}
+  });
+  new Set(Object.keys(a.log).concat(Object.keys(b.log))).forEach(k=>{
+    const x=a.log[k],y=b.log[k];
+    m.log[k]=!x?y:!y?x:(x.tot>=y.tot?x:y);
+  });
+  const seen={};
+  (a.records||[]).concat(b.records||[]).forEach(r=>{
+    const id=[r.d,r.part,r.q,r.c,r.min,r.memo||""].join("|");
+    if(!seen[id]){seen[id]=1;m.records.push(r)}
+  });
+  m.records.sort((x,y)=>x.d<y.d?-1:1);
+  return m;
+}
+function pullMerge(){
+  if(!fbDb||!fbUser)return;
+  fbDb.collection("users").doc(fbUser.uid).get().then(snap=>{
+    if(snap.exists)S=mergeState(S,snap.data().state);
+    try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    pushNow();renderHome();renderSync();
+  }).catch(e=>{console.error(e);renderSync("同期エラー: "+e.code)});
+}
+function pushNow(){
+  if(!fbDb||!fbUser)return;
+  fbDb.collection("users").doc(fbUser.uid).set({state:S,updatedAt:Date.now()})
+    .then(()=>{lastSync=new Date();renderSync()})
+    .catch(e=>{console.error(e);renderSync("同期エラー: "+e.code)});
+}
+function queuePush(){if(!fbDb||!fbUser)return;clearTimeout(syncTimer);syncTimer=setTimeout(pushNow,2000)}
+function renderSync(err){
+  const st=document.getElementById("syncStatus"),btn=document.getElementById("syncBtn");
+  if(!st)return;
+  if(err){st.textContent=err;return}
+  if(!fbReady()){st.textContent="未設定。Firebase設定の組み込みが必要です。";btn.textContent="Googleでログイン";return}
+  if(fbUser){st.textContent="ログイン中: "+(fbUser.email||"")+(lastSync?" ｜ 最終同期 "+lastSync.toLocaleTimeString():" ｜ 同期待機中");btn.textContent="ログアウト"}
+  else{st.textContent="未ログイン。ログインすると全端末で自動同期されます。";btn.textContent="Googleでログイン"}
+}
+// ===== データ =====
+function renderData(){document.getElementById("setDaily").value=S.daily;document.getElementById("totalWords").textContent=DATA.length;renderSync()}
+function setDaily(v){S.daily=Math.max(5,Math.min(50,parseInt(v)||15));save()}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="toeic800_data_"+today()+".json";a.click();
+}
+function copyData(){navigator.clipboard.writeText(JSON.stringify(S)).then(()=>alert("コピーしました")).catch(()=>alert("コピーできませんでした。書き出しを使ってください"))}
+function applyImport(txt){
+  try{const d=JSON.parse(txt);if(!d.words||!d.records)throw 0;S=Object.assign(init(),d);save();alert("読み込みました");showTab("home")}
+  catch(e){alert("データ形式が不正です")}
+}
+function importFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>applyImport(r.result);r.readAsText(f)}
+function importText(){const t=document.getElementById("impText").value.trim();if(t)applyImport(t)}
+function resetAll(){if(confirm("全データを削除します。よろしいですか")&&confirm("本当に初期化しますか")){localStorage.removeItem(KEY);S=init();showTab("home")}}
+// ===== カウントダウン =====
+function countdown(){
+  const now=new Date(),exam=new Date(EXAM+"T00:00:00");
+  const days=Math.ceil((exam-now)/86400000);
+  document.getElementById("countdown").textContent=days>0?"8/23まで あと"+days+"日":days===0?"本番当日":"試験終了";
+}
+countdown();renderHome();fbInit();
+</script>
+</body>
+</html>
