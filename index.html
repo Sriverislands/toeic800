@@ -45,6 +45,9 @@ th{color:var(--sub);font-weight:600;font-size:11px}
 .weak b{font-weight:700}
 .weak span{color:var(--sub);font-size:13px;text-align:right;max-width:60%}
 .note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:8px}
+.plan{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.plan.done span{color:var(--sub);text-decoration:line-through}
+.plan input{margin-top:2px;flex:none}
 svg text{font-family:inherit}
 .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#eff6ff;color:var(--acc);margin-left:6px}
 </style>
@@ -61,6 +64,11 @@ svg text{font-family:inherit}
       <div class="stat"><div class="n" id="hRev">-</div><div class="l">復習</div><div class="bar"><div id="hRevBar"></div></div></div>
     </div>
     <button class="pri" style="margin-top:10px" onclick="startQuiz()">単語学習を始める</button>
+  </div>
+  <div class="card">
+    <h2>今日の演習メニュー (公式問題集)</h2>
+    <div id="hPlan"></div>
+    <div class="note" id="hPlanNote"></div>
   </div>
   <div class="card">
     <h2>学習状況</h2>
@@ -624,9 +632,10 @@ const DATA=[
 // ===== 状態 =====
 const KEY="toeic800v1";
 const EXAM="2026-08-23";
+const PLAN={"2026-07-18":["公式10 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式10 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-07-19":["公式10 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式10 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-07-20":["公式10 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式10 T1 Part 3 後半 Q50〜70 → シャドーイング"],"2026-07-21":["公式10 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式10 T1 Part 4 後半 Q86〜100 → シャドーイング"],"2026-07-22":["公式10 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式10 T2 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング","Part 6 Q131〜146 (公式7 T1・10分)"],"2026-07-23":["公式10 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式10 T2 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-07-24":["公式9 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式10 T2 Part 3 後半 Q50〜70 → シャドーイング"],"2026-07-25":["公式9 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式10 T2 Part 4 後半 Q86〜100 → シャドーイング"],"2026-07-26":["公式9 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式9 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-07-27":["公式9 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式9 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-07-28":["公式9 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式9 T1 Part 3 後半 Q50〜70 → シャドーイング"],"2026-07-29":["公式9 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式9 T1 Part 4 後半 Q86〜100 → シャドーイング","Part 6 Q131〜146 (公式7 T2・10分)"],"2026-07-30":["公式8 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式9 T2 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-07-31":["公式8 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式9 T2 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-01":["公式12 Test1 リスニング通し (45分・マークシート使用・初見)","答え合わせと素点記録のみ (復習は8/3)"],"2026-08-02":["公式12 Test1 リーディング通し (75分・時間厳守で最後まで)","答え合わせと素点記録 (記録タブに入力)"],"2026-08-03":["模試復習: Part 7 誤答の原因分類 (語彙/速度/根拠の読み違い)","模試復習: Part 3/4 誤答箇所のシャドーイング"],"2026-08-04":["公式8 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式9 T2 Part 3 後半 Q50〜70 → シャドーイング"],"2026-08-05":["公式8 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式9 T2 Part 4 後半 Q86〜100 → シャドーイング","Part 6 Q131〜146 (公式8 T1・10分)"],"2026-08-06":["公式8 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式8 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-08-07":["公式8 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式8 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-08":["公式7 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式8 T1 Part 3 後半 Q50〜70 → シャドーイング"],"2026-08-09":["公式7 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式8 T1 Part 4 後半 Q86〜100 → シャドーイング"],"2026-08-10":["公式7 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式8 T2 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-08-11":["公式7 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式8 T2 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-12":["公式7 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式8 T2 Part 3 後半 Q50〜70 → シャドーイング","Part 6 Q131〜146 (公式8 T2・10分)"],"2026-08-13":["公式7 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式8 T2 Part 4 後半 Q86〜100 → シャドーイング"],"2026-08-14":["Part 7 誤答問題の解き直し (根拠に線を引く)","公式7 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-08-15":["Part 7 誤答問題の解き直し (根拠に線を引く)","公式7 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-16":["公式12 Test2 通し模試 (2時間・本番形式) ※2時間不可ならL=今日/R=明日に分割し以降を1日ずつ後ろへ"],"2026-08-17":["模試復習: R誤答分析と知らなかった語彙の抜き出し","模試復習: L誤答箇所のシャドーイング"],"2026-08-18":["Part 2 Q7〜31 (公式10 T1・25問15分)","苦手単語の集中復習 (アプリの苦手一覧)"],"2026-08-19":["Part 7 ダブル+トリプル 解き直し (模試で間違えた問題)","Part 3 シャドーイング復習 (これまでの誤答会話)"],"2026-08-20":["Part 2 Q7〜31 (公式10 T2)","Part 6 Q131〜146 (公式9 T1・10分)"],"2026-08-21":["Part 7 シングル速読 (公式12 T1の解き直し・根拠確認)","Part 4 シャドーイング復習"],"2026-08-22":["苦手単語の総復習 (アプリ)","Part 2 Q7〜31 (公式9 T1・耳慣らし)","新しい問題はやらない。持ち物確認して早めに休む"]};
 const INTERVALS=[0,1,3,7,14,30];
 let S=load();
-function init(){return{words:{},log:{},records:[],daily:15}}
+function init(){return{words:{},log:{},records:[],daily:15,plan:{}}}
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));return d&&d.words?Object.assign(init(),d):init()}catch(e){return init()}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}queuePush()}
 function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
@@ -656,6 +665,7 @@ function renderHome(){
   document.getElementById("hWeak").innerHTML=weak.length?weak.map(i=>'<div class="weak"><b>'+DATA[i][0]+'</b><span>'+DATA[i][2]+' <em style="color:var(--ng);font-style:normal">×'+S.words[i].wrong+'</em></span></div>').join(""):'<div class="note">まだありません</div>';
   const rec=S.records.slice(-3).reverse();
   document.getElementById("hRecent").innerHTML=rec.length?rec.map(r=>'<div class="weak"><b>'+r.d.slice(5)+' '+r.part+'</b><span>'+r.c+'/'+r.q+' ('+Math.round(r.c/r.q*100)+'%)'+(r.min?' '+Math.round(r.min*60/r.q)+'秒/問':'')+'</span></div>').join(""):'<div class="note">記録タブから公式問題集の演習結果を入力してください</div>';
+  renderPlan();
 }
 // ===== クイズ =====
 let queue=[],qi=0,sessionOK=0,answered=false;
@@ -707,6 +717,17 @@ function endScreen(msg,done){
   document.getElementById("qPos").textContent=msg;
   document.getElementById("qChoices").innerHTML='<button class="pri" onclick="startQuiz()">続けて学習する</button><button class="sec" onclick="showTab(\'home\')">ホームへ戻る</button>';
 }
+// ===== 演習メニュー =====
+function renderPlan(){
+  const el=document.getElementById("hPlan");if(!el)return;
+  const t=today();const items=PLAN[t];const note=document.getElementById("hPlanNote");
+  if(!items){el.innerHTML='<div class="note">'+(t>=EXAM?"試験当日/終了。お疲れさまでした。":"今日の割り当てはありません")+'</div>';note.textContent="";return}
+  const st=(S.plan||{})[t]||{};
+  el.innerHTML=items.map(function(x,i){return '<label class="plan'+(st[i]?" done":"")+'"><input type="checkbox"'+(st[i]?" checked":"")+' onchange="togglePlan(\''+t+'\','+i+')"><span>'+x+'</span></label>'}).join("");
+  const tm=PLAN[addDays(t,1)];
+  note.textContent=tm?"明日: "+tm.map(function(x){return x.split(" (")[0]}).join(" ／ "):"";
+}
+function togglePlan(d,i){if(!S.plan)S.plan={};if(!S.plan[d])S.plan[d]={};S.plan[d][i]=!S.plan[d][i];save();renderPlan()}
 // ===== 記録 =====
 function addRec(){
   const d=document.getElementById("rDate").value||today();
@@ -781,6 +802,12 @@ function mergeState(a,b){
   new Set(Object.keys(a.log).concat(Object.keys(b.log))).forEach(k=>{
     const x=a.log[k],y=b.log[k];
     m.log[k]=!x?y:!y?x:(x.tot>=y.tot?x:y);
+  });
+  const ap=a.plan||{},bp=b.plan||{};
+  new Set(Object.keys(ap).concat(Object.keys(bp))).forEach(k=>{
+    const pa=ap[k]||{},pb=bp[k]||{},o={};
+    new Set(Object.keys(pa).concat(Object.keys(pb))).forEach(i=>{o[i]=!!(pa[i]||pb[i])});
+    m.plan[k]=o;
   });
   const seen={};
   (a.records||[]).concat(b.records||[]).forEach(r=>{
