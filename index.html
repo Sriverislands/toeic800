@@ -80,6 +80,11 @@ svg text{font-family:inherit}
 .wchip b{font-weight:700}
 .abhint{font-size:12px;color:var(--sub);background:#eff6ff;border-radius:8px;padding:9px 11px;margin-bottom:12px;line-height:1.6}
 .scoreline{font-size:15px;font-weight:700;text-align:center;padding:10px 0}
+.lvbadge{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;vertical-align:middle;margin-left:4px}
+.lvbadge.lv1{background:#ecfdf5;color:#059669}
+.lvbadge.lv2{background:#fffbeb;color:#b45309}
+.lvbadge.lv3{background:#fef2f2;color:#dc2626}
+.discl{font-size:11px;color:var(--sub);text-align:center;padding:14px 8px 4px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -197,6 +202,8 @@ svg text{font-family:inherit}
   <div id="pracMenu"></div>
   <div id="pracRun" style="display:none"></div>
 </div>
+
+<div class="discl">本アプリは非公式の個人学習ツールです。ETS・IIBCとは関係ありません。演習問題はオリジナル作成物です。"TOEIC" はETSの登録商標です。</div>
 
 </main>
 <nav>
@@ -1008,6 +1015,10 @@ function resetAll(){if(confirm("全データを削除します。よろしいで
 function contentSets(){return (window.CONTENT&&Array.isArray(window.CONTENT))?window.CONTENT:[]}
 function partName(p){return p===3?"Part 3":p===4?"Part 4":p===7?"Part 7":"Part "+p}
 function setResult(id){return (S.prac&&S.prac[id])||null}
+var LEVELINFO={1:{star:"★",name:"800",cls:"lv1"},2:{star:"★★",name:"900",cls:"lv2"},3:{star:"★★★",name:"930",cls:"lv3"}};
+function daysToExam(){var now=new Date();var ex=new Date(EXAM+"T00:00:00");return Math.max(0,Math.ceil((ex-now)/86400000));}
+function recommendedLevel(){var d=daysToExam();if(d>=25)return 1;if(d>=12)return 2;return 3;}
+function lvBadge(l){return l?('<span class="lvbadge '+LEVELINFO[l].cls+'">'+LEVELINFO[l].star+' '+LEVELINFO[l].name+'</span>'):'';}
 function renderPrac(){
   document.getElementById("pracRun").style.display="none";
   const menu=document.getElementById("pracMenu");menu.style.display="";
@@ -1019,22 +1030,32 @@ function renderPrac(){
       +'スクショを渡してもらえれば、公式7 Test1 Part3 から順に転記していきます。</div></div>';
     return;
   }
-  // 本→テスト→パート でグルーピング
-  const byBook={};
-  sets.forEach(function(s){var b="公式"+s.book;(byBook[b]=byBook[b]||[]).push(s)});
-  let html="";
-  Object.keys(byBook).forEach(function(bk){
+  // 推奨難易度（本番日までの日数で変化）
+  var rec=recommendedLevel(),dl=daysToExam();
+  var li=LEVELINFO[rec];
+  var banner='<div class="abhint" style="background:#eef2ff;color:var(--txt)">本番まで あと<b>'+dl+'日</b> ｜ 今日のおすすめ難易度：<b>'+li.star+' '+li.name+'</b> 中心（近づくほど高難度を上に表示）</div>';
+  // グルーピング（group 指定があればそれを、無ければ 公式+book）
+  const groups={};
+  sets.forEach(function(s){var b=s.group||("公式"+s.book);(groups[b]=groups[b]||[]).push(s)});
+  let html=banner;
+  Object.keys(groups).forEach(function(bk){
     html+='<div class="card"><h2>'+bk+'</h2>';
-    const arr=byBook[bk].slice().sort(function(a,b){return (a.test-b.test)||(a.part-b.part)||(a.qStart-b.qStart)});
+    const arr=groups[bk].slice().sort(function(a,b){
+      var ca=a.level?Math.abs(a.level-rec):0, cb=b.level?Math.abs(b.level-rec):0;
+      return ca-cb || ((a.test||0)-(b.test||0)) || ((a.part||0)-(b.part||0)) || (a.qStart-b.qStart);
+    });
     let curKey="";
     arr.forEach(function(s){
-      const k="Test"+s.test+" / "+partName(s.part);
-      if(k!==curKey){html+='<div class="pgroup">'+k+'</div>';curKey=k;}
+      if(!s.group){
+        const k="Test"+s.test+" / "+partName(s.part);
+        if(k!==curKey){html+='<div class="pgroup">'+k+'</div>';curKey=k;}
+      }
       const r=setResult(s.id),n=s.questions.length;
       const qend=s.questions[n-1].n;
       const badge=r?('<span class="badge done">'+r.ok+'/'+n+' 済</span>'):('<span class="badge">'+n+'問 未</span>');
+      const label=s.group?(s.title||('Q'+s.qStart+'–'+qend)):('Q'+s.qStart+'–'+qend+(s.title?'　'+s.title:''));
       html+='<div class="setrow" onclick="startSet(\''+s.id+'\')">'
-        +'<div><div class="st">Q'+s.qStart+'–'+qend+(s.title?'　'+s.title:'')+'</div>'
+        +'<div><div class="st">'+label+' '+lvBadge(s.level)+'</div>'
         +'<div class="sd">'+(s.part===7?(s.passages.length>1?s.passages.length+'文書':'シングル'):'会話/トーク')+'・'+n+'問</div></div>'
         +badge+'</div>';
     });
@@ -1050,7 +1071,7 @@ function startSet(id){
   const run=document.getElementById("pracRun");run.style.display="";
   let html='<div class="card">';
   html+='<button class="sec" style="margin:0 0 10px" onclick="renderPrac()">← 一覧に戻る</button>';
-  html+='<h2>公式'+s.book+' Test'+s.test+' '+partName(s.part)+'　Q'+s.qStart+'–'+s.questions[s.questions.length-1].n+'</h2>';
+  html+='<h2>'+(s.group?(esc(s.group)+(s.title?'：'+esc(s.title):'')+' '+lvBadge(s.level)):('公式'+s.book+' Test'+s.test+' '+partName(s.part)+'　Q'+s.qStart+'–'+s.questions[s.questions.length-1].n))+'</h2>';
   if(s.part===7){
     html+=s.passages.map(function(p,i){return '<div class="passage">'+(s.passages.length>1?'<b>[文書'+(i+1)+']</b>\n':'')+esc(p)+'</div>'}).join("");
   }else{
