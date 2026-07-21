@@ -1084,7 +1084,7 @@ function gradeSet(){
   s.questions.forEach(function(q,qi){
     const pick=setPicks[qi];
     for(var c=0;c<q.choices.length;c++){
-      const b=document.getElementById("c_"+qi+"_"+c);b.style.background="var(--card)";
+      const b=document.getElementById("c_"+qi+"_"+c);b.style.background="";b.style.borderColor="";
       if(c===q.ans)b.classList.add("ok");
       if(pick===c&&pick!==q.ans)b.classList.add("ng");
     }
