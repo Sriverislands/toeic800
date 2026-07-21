@@ -1056,6 +1056,7 @@ function startSet(id){
   }else{
     html+='<div class="abhint">🎧 abceed で該当の音声 (公式'+s.book+' Test'+s.test+' '+partName(s.part)+' Q'+s.qStart+'〜) を再生しながら解答してください。スクリプトは採点後に表示されます。</div>';
   }
+  if(s.figure){ html+='<div class="passage" style="background:#fffef5;border-color:#fde68a">'+esc(s.figure)+'</div>'; }
   html+=s.questions.map(function(q,qi){
     const opts=q.choices.map(function(c,ci){
       return '<button class="choice" id="c_'+qi+'_'+ci+'" onclick="pickSet('+qi+','+ci+')">'+String.fromCharCode(65+ci)+'. '+esc(c)+'</button>';
