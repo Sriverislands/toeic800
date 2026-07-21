@@ -58,6 +58,28 @@ th{color:var(--sub);font-weight:600;font-size:11px}
 .tbtn.act{background:var(--acc);color:#fff;border-color:var(--acc)}
 svg text{font-family:inherit}
 .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#eff6ff;color:var(--acc);margin-left:6px}
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.setrow:last-child{border-bottom:none}
+.setrow .st{font-size:14px;font-weight:600}
+.setrow .sd{font-size:12px;color:var(--sub);margin-top:2px}
+.setrow .badge{font-size:11px;padding:3px 9px;border-radius:10px;background:#f1f5f9;color:var(--sub);white-space:nowrap}
+.setrow .badge.done{background:#f0fdf4;color:var(--ok)}
+.pgroup{font-size:12px;color:var(--sub);font-weight:700;margin:14px 0 4px;letter-spacing:.5px}
+.passage{font-size:14px;line-height:1.85;white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:12px}
+.qblk{margin-bottom:18px;padding-bottom:6px;border-bottom:1px dashed var(--line)}
+.qstem{font-size:14px;font-weight:600;margin-bottom:9px;line-height:1.5}
+.qstem .qn{color:var(--acc);margin-right:6px}
+.exp{font-size:13px;line-height:1.7;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-top:8px;white-space:pre-wrap;display:none}
+.exp.show{display:block}
+.exp b{color:#b45309}
+.wreg{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:6px}
+.wreg .rowin{display:flex;gap:6px}
+.wreg .rowin input{flex:1}
+.wreg select{width:70px;flex:none}
+.wchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#eff6ff;color:var(--acc);border-radius:12px;padding:3px 10px;margin:4px 4px 0 0}
+.wchip b{font-weight:700}
+.abhint{font-size:12px;color:var(--sub);background:#eff6ff;border-radius:8px;padding:9px 11px;margin-bottom:12px;line-height:1.6}
+.scoreline{font-size:15px;font-weight:700;text-align:center;padding:10px 0}
 </style>
 </head>
 <body>
@@ -171,14 +193,24 @@ svg text{font-family:inherit}
   </div>
 </div>
 
+<div id="tab-prac" class="tab">
+  <div id="pracMenu"></div>
+  <div id="pracRun" style="display:none"></div>
+</div>
+
 </main>
 <nav>
   <button id="nav-home" class="act" onclick="showTab('home')">ホーム</button>
   <button id="nav-quiz" onclick="showTab('quiz');startQuiz()">単語</button>
+  <button id="nav-prac" onclick="showTab('prac')">演習</button>
   <button id="nav-rec" onclick="showTab('rec')">記録</button>
   <button id="nav-data" onclick="showTab('data')">データ</button>
 </nav>
 
+<!-- 公開OKの自作サンプル（著作権フリー）。GitHubに乗せる。 -->
+<script src="content.sample.js" onerror="window.__noSample=1"></script>
+<!-- 公式データ（著作物）は手元だけの content.local.js に入れる。.gitignoreで除外・公開しない。存在すればサンプルを上書き。 -->
+<script src="content.local.js" onerror="window.__noLocal=1"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -653,7 +685,7 @@ const EXAM="2026-08-23";
 const PLAN={"2026-07-18":["公式10 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式10 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-07-19":["公式10 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式10 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-07-20":["公式10 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式10 T1 Part 3 後半 Q50〜70 → シャドーイング"],"2026-07-21":["公式10 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式10 T1 Part 4 後半 Q86〜100 → シャドーイング"],"2026-07-22":["公式10 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式10 T2 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング","Part 6 Q131〜146 (公式7 T1・10分)"],"2026-07-23":["公式10 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式10 T2 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-07-24":["公式9 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式10 T2 Part 3 後半 Q50〜70 → シャドーイング"],"2026-07-25":["公式9 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式10 T2 Part 4 後半 Q86〜100 → シャドーイング"],"2026-07-26":["公式9 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式9 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-07-27":["公式9 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式9 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-07-28":["公式9 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式9 T1 Part 3 後半 Q50〜70 → シャドーイング"],"2026-07-29":["公式9 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式9 T1 Part 4 後半 Q86〜100 → シャドーイング","Part 6 Q131〜146 (公式7 T2・10分)"],"2026-07-30":["公式8 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式9 T2 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-07-31":["公式8 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式9 T2 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-01":["公式12 Test1 リスニング通し (45分・マークシート使用・初見)","答え合わせと素点記録のみ (復習は8/3)"],"2026-08-02":["公式12 Test1 リーディング通し (75分・時間厳守で最後まで)","答え合わせと素点記録 (記録タブに入力)"],"2026-08-03":["模試復習: Part 7 誤答の原因分類 (語彙/速度/根拠の読み違い)","模試復習: Part 3/4 誤答箇所のシャドーイング"],"2026-08-04":["公式8 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式9 T2 Part 3 後半 Q50〜70 → シャドーイング"],"2026-08-05":["公式8 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式9 T2 Part 4 後半 Q86〜100 → シャドーイング","Part 6 Q131〜146 (公式8 T1・10分)"],"2026-08-06":["公式8 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式8 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-08-07":["公式8 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式8 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-08":["公式7 T1 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式8 T1 Part 3 後半 Q50〜70 → シャドーイング"],"2026-08-09":["公式7 T1 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式8 T1 Part 4 後半 Q86〜100 → シャドーイング"],"2026-08-10":["公式7 T1 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式8 T2 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-08-11":["公式7 T2 Part 7 シングル前半 Q147〜160 (時間計測・目標15分)","公式8 T2 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-12":["公式7 T2 Part 7 シングル後半 Q161〜175 (時間計測・目標16分)","公式8 T2 Part 3 後半 Q50〜70 → シャドーイング","Part 6 Q131〜146 (公式8 T2・10分)"],"2026-08-13":["公式7 T2 Part 7 ダブル+トリプル Q176〜200 (時間計測・目標27分)","公式8 T2 Part 4 後半 Q86〜100 → シャドーイング"],"2026-08-14":["Part 7 誤答問題の解き直し (根拠に線を引く)","公式7 T1 Part 3 前半 Q32〜49 → 間違えた会話をシャドーイング"],"2026-08-15":["Part 7 誤答問題の解き直し (根拠に線を引く)","公式7 T1 Part 4 前半 Q71〜85 → 間違えたトークをシャドーイング"],"2026-08-16":["公式12 Test2 通し模試 (2時間・本番形式) ※2時間不可ならL=今日/R=明日に分割し以降を1日ずつ後ろへ"],"2026-08-17":["模試復習: R誤答分析と知らなかった語彙の抜き出し","模試復習: L誤答箇所のシャドーイング"],"2026-08-18":["Part 2 Q7〜31 (公式10 T1・25問15分)","苦手単語の集中復習 (アプリの苦手一覧)"],"2026-08-19":["Part 7 ダブル+トリプル 解き直し (模試で間違えた問題)","Part 3 シャドーイング復習 (これまでの誤答会話)"],"2026-08-20":["Part 2 Q7〜31 (公式10 T2)","Part 6 Q131〜146 (公式9 T1・10分)"],"2026-08-21":["Part 7 シングル速読 (公式12 T1の解き直し・根拠確認)","Part 4 シャドーイング復習"],"2026-08-22":["苦手単語の総復習 (アプリ)","Part 2 Q7〜31 (公式9 T1・耳慣らし)","新しい問題はやらない。持ち物確認して早めに休む"]};
 const INTERVALS=[0,1,3,7,14,30];
 let S=load();
-function init(){return{words:{},log:{},records:[],daily:15,plan:{},tsec:{},p5:{}}}
+function init(){return{words:{},log:{},records:[],daily:15,plan:{},tsec:{},p5:{},prac:{},custom:[]}}
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));return d&&d.words?Object.assign(init(),d):init()}catch(e){return init()}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}queuePush()}
 function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
@@ -661,10 +693,13 @@ function addDays(ds,n){const d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n)
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function logToday(){const t=today();if(!S.log[t])S.log[t]={nw:0,rv:0,ok:0,tot:0};return S.log[t]}
 // ===== タブ =====
-function showTab(n){document.querySelectorAll(".tab").forEach(e=>e.classList.remove("show"));document.querySelectorAll("nav button").forEach(e=>e.classList.remove("act"));document.getElementById("tab-"+n).classList.add("show");document.getElementById("nav-"+n).classList.add("act");if(n==="home")renderHome();if(n==="rec")renderRec();if(n==="data")renderData();window.scrollTo(0,0)}
+function showTab(n){document.querySelectorAll(".tab").forEach(e=>e.classList.remove("show"));document.querySelectorAll("nav button").forEach(e=>e.classList.remove("act"));document.getElementById("tab-"+n).classList.add("show");document.getElementById("nav-"+n).classList.add("act");if(n==="home")renderHome();if(n==="rec")renderRec();if(n==="data")renderData();if(n==="prac")renderPrac();window.scrollTo(0,0)}
+// ===== 単語バンク (収録語 + Part3/4/7で登録した語) =====
+let WB=DATA.slice();
+function rebuildWB(){WB=DATA.concat((S.custom||[]).map(function(c){return[c.w,c.pos,c.mean]}))}
 // ===== ホーム =====
-function dueList(){const t=today();return Object.keys(S.words).filter(i=>S.words[i].box>=1&&S.words[i].due<=t)}
-function newList(){return DATA.map((_,i)=>String(i)).filter(i=>!S.words[i])}
+function dueList(){const t=today();return Object.keys(S.words).filter(i=>S.words[i]&&S.words[i].box>=1&&S.words[i].due<=t)}
+function newList(){return WB.map((_,i)=>String(i)).filter(i=>!S.words[i])}
 function renderHome(){
   const lg=logToday(),due=dueList(),newQuota=S.daily;
   const nwDone=lg.nw,rvTotal=due.length+lg.rv;
@@ -679,8 +714,8 @@ function renderHome(){
   const ws=Object.values(S.words);
   document.getElementById("hLearned").textContent=Object.keys(S.words).length;
   document.getElementById("hMaster").textContent=ws.filter(w=>w.box>=4).length;
-  const weak=Object.keys(S.words).filter(i=>S.words[i].wrong>=2).sort((a,b)=>S.words[b].wrong-S.words[a].wrong).slice(0,10);
-  document.getElementById("hWeak").innerHTML=weak.length?weak.map(i=>'<div class="weak"><b>'+DATA[i][0]+'</b><span>'+DATA[i][2]+' <em style="color:var(--ng);font-style:normal">×'+S.words[i].wrong+'</em></span></div>').join(""):'<div class="note">まだありません</div>';
+  const weak=Object.keys(S.words).filter(i=>S.words[i].wrong>=2&&WB[i]).sort((a,b)=>S.words[b].wrong-S.words[a].wrong).slice(0,10);
+  document.getElementById("hWeak").innerHTML=weak.length?weak.map(i=>'<div class="weak"><b>'+WB[i][0]+'</b><span>'+WB[i][2]+' <em style="color:var(--ng);font-style:normal">×'+S.words[i].wrong+'</em></span></div>').join(""):'<div class="note">まだありません</div>';
   const rec=S.records.slice(-3).reverse();
   document.getElementById("hRecent").innerHTML=rec.length?rec.map(r=>'<div class="weak"><b>'+r.d.slice(5)+' '+r.part+'</b><span>'+r.c+'/'+r.q+' ('+Math.round(r.c/r.q*100)+'%)'+(r.min?' '+Math.round(r.min*60/r.q)+'秒/問':'')+'</span></div>').join(""):'<div class="note">記録タブから公式問題集の演習結果を入力してください</div>';
   renderPlan();
@@ -702,18 +737,18 @@ function showQ(){
   answered=false;qShownAt=Date.now();
   const w0=document.getElementById("qWord");
   w0.style.fontSize="34px";w0.style.textAlign="center";w0.style.fontWeight="700";w0.style.padding="26px 0 6px";
-  const i=queue[qi],w=DATA[i];
+  const i=queue[qi],w=WB[i];
   document.getElementById("qProg").textContent=(qi+1)+" / "+queue.length+(S.words[i]?"　復習":"　新規");
   document.getElementById("qWord").textContent=w[0];
   document.getElementById("qPos").textContent="["+w[1]+"]";
-  const pool=DATA.filter((x,j)=>String(j)!==i&&x[1]===w[1]);
+  const pool=WB.filter((x,j)=>String(j)!==i&&x[1]===w[1]);
   const ds=shuffle(pool.slice()).slice(0,3).map(x=>x[2]);
   const opts=shuffle([w[2]].concat(ds));
   document.getElementById("qChoices").innerHTML=opts.map(o=>'<button class="choice" onclick="pick(this)">'+o+'</button>').join("");
 }
 function pick(btn){
   if(answered)return;answered=true;
-  const i=queue[qi],w=DATA[i],correct=btn.textContent===w[2];
+  const i=queue[qi],w=WB[i],correct=btn.textContent===w[2];
   document.querySelectorAll(".choice").forEach(b=>{if(b.textContent===w[2])b.classList.add("ok")});
   if(!correct)btn.classList.add("ng");
   const lg=logToday();
@@ -920,6 +955,15 @@ function mergeState(a,b){
     if(!seen[id]){seen[id]=1;m.records.push(r)}
   });
   m.records.sort((x,y)=>x.d<y.d?-1:1);
+  const apr=a.prac||{},bpr=b.prac||{};
+  new Set(Object.keys(apr).concat(Object.keys(bpr))).forEach(k=>{
+    const x=apr[k],y=bpr[k];
+    m.prac[k]=!x?y:!y?x:((y.d>x.d||(y.d===x.d&&(y.ok||0)>=(x.ok||0)))?y:x);
+  });
+  const cseen={};m.custom=[];
+  (a.custom||[]).concat(b.custom||[]).forEach(c=>{
+    const key=(c.w||"").toLowerCase();if(key&&!cseen[key]){cseen[key]=1;m.custom.push(c)}
+  });
   return m;
 }
 function pullMerge(){
@@ -927,7 +971,7 @@ function pullMerge(){
   fbDb.collection("users").doc(fbUser.uid).get().then(snap=>{
     if(snap.exists)S=mergeState(S,snap.data().state);
     try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-    pushNow();renderHome();renderSync();
+    rebuildWB();pushNow();renderHome();renderSync();
   }).catch(e=>{console.error(e);renderSync("同期エラー: "+e.code)});
 }
 function pushNow(){
@@ -954,19 +998,155 @@ function exportData(){
 }
 function copyData(){navigator.clipboard.writeText(JSON.stringify(S)).then(()=>alert("コピーしました")).catch(()=>alert("コピーできませんでした。書き出しを使ってください"))}
 function applyImport(txt){
-  try{const d=JSON.parse(txt);if(!d.words||!d.records)throw 0;S=Object.assign(init(),d);save();alert("読み込みました");showTab("home")}
+  try{const d=JSON.parse(txt);if(!d.words||!d.records)throw 0;S=Object.assign(init(),d);rebuildWB();save();alert("読み込みました");showTab("home")}
   catch(e){alert("データ形式が不正です")}
 }
 function importFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>applyImport(r.result);r.readAsText(f)}
 function importText(){const t=document.getElementById("impText").value.trim();if(t)applyImport(t)}
 function resetAll(){if(confirm("全データを削除します。よろしいですか")&&confirm("本当に初期化しますか")){localStorage.removeItem(KEY);S=init();showTab("home")}}
+// ===== Part3/4/7 演習 =====
+function contentSets(){return (window.CONTENT&&Array.isArray(window.CONTENT))?window.CONTENT:[]}
+function partName(p){return p===3?"Part 3":p===4?"Part 4":p===7?"Part 7":"Part "+p}
+function setResult(id){return (S.prac&&S.prac[id])||null}
+function renderPrac(){
+  document.getElementById("pracRun").style.display="none";
+  const menu=document.getElementById("pracMenu");menu.style.display="";
+  const sets=contentSets();
+  if(!sets.length){
+    menu.innerHTML='<div class="card"><h2>問題演習 (Part 3/4/7)</h2>'
+      +'<div class="note">公式問題集のコンテンツ (<b>content.local.js</b>) がまだ読み込まれていません。<br><br>'
+      +'このファイルは公式の本文・スクリプト・解説を入れるローカル専用ファイルで、著作権保護のため公開リポジトリには含めません (.gitignore)。<br>'
+      +'スクショを渡してもらえれば、公式7 Test1 Part3 から順に転記していきます。</div></div>';
+    return;
+  }
+  // 本→テスト→パート でグルーピング
+  const byBook={};
+  sets.forEach(function(s){var b="公式"+s.book;(byBook[b]=byBook[b]||[]).push(s)});
+  let html="";
+  Object.keys(byBook).forEach(function(bk){
+    html+='<div class="card"><h2>'+bk+'</h2>';
+    const arr=byBook[bk].slice().sort(function(a,b){return (a.test-b.test)||(a.part-b.part)||(a.qStart-b.qStart)});
+    let curKey="";
+    arr.forEach(function(s){
+      const k="Test"+s.test+" / "+partName(s.part);
+      if(k!==curKey){html+='<div class="pgroup">'+k+'</div>';curKey=k;}
+      const r=setResult(s.id),n=s.questions.length;
+      const qend=s.questions[n-1].n;
+      const badge=r?('<span class="badge done">'+r.ok+'/'+n+' 済</span>'):('<span class="badge">'+n+'問 未</span>');
+      html+='<div class="setrow" onclick="startSet(\''+s.id+'\')">'
+        +'<div><div class="st">Q'+s.qStart+'–'+qend+(s.title?'　'+s.title:'')+'</div>'
+        +'<div class="sd">'+(s.part===7?(s.passages.length>1?s.passages.length+'文書':'シングル'):'会話/トーク')+'・'+n+'問</div></div>'
+        +badge+'</div>';
+    });
+    html+='</div>';
+  });
+  menu.innerHTML=html;
+}
+let curSet=null,setPicks={};
+function startSet(id){
+  const s=contentSets().find(function(x){return x.id===id});if(!s)return;
+  curSet=s;setPicks={};
+  document.getElementById("pracMenu").style.display="none";
+  const run=document.getElementById("pracRun");run.style.display="";
+  let html='<div class="card">';
+  html+='<button class="sec" style="margin:0 0 10px" onclick="renderPrac()">← 一覧に戻る</button>';
+  html+='<h2>公式'+s.book+' Test'+s.test+' '+partName(s.part)+'　Q'+s.qStart+'–'+s.questions[s.questions.length-1].n+'</h2>';
+  if(s.part===7){
+    html+=s.passages.map(function(p,i){return '<div class="passage">'+(s.passages.length>1?'<b>[文書'+(i+1)+']</b>\n':'')+esc(p)+'</div>'}).join("");
+  }else{
+    html+='<div class="abhint">🎧 abceed で該当の音声 (公式'+s.book+' Test'+s.test+' '+partName(s.part)+' Q'+s.qStart+'〜) を再生しながら解答してください。スクリプトは採点後に表示されます。</div>';
+  }
+  html+=s.questions.map(function(q,qi){
+    const opts=q.choices.map(function(c,ci){
+      return '<button class="choice" id="c_'+qi+'_'+ci+'" onclick="pickSet('+qi+','+ci+')">'+String.fromCharCode(65+ci)+'. '+esc(c)+'</button>';
+    }).join("");
+    return '<div class="qblk" id="qblk_'+qi+'"><div class="qstem"><span class="qn">Q'+q.n+'</span>'+esc(q.stem)+'</div>'+opts
+      +'<div class="exp" id="exp_'+qi+'"></div></div>';
+  }).join("");
+  html+='<div id="setScore"></div>';
+  html+='<button class="pri" id="gradeBtn" onclick="gradeSet()">採点する</button>';
+  html+='</div>';
+  run.innerHTML=html;window.scrollTo(0,0);
+}
+function pickSet(qi,ci){
+  if(curSet&&curSet.__graded)return;
+  setPicks[qi]=ci;
+  const q=curSet.questions[qi];
+  for(var c=0;c<q.choices.length;c++){
+    document.getElementById("c_"+qi+"_"+c).style.borderColor=(c===ci)?"var(--acc)":"var(--line)";
+    document.getElementById("c_"+qi+"_"+c).style.background=(c===ci)?"#eff6ff":"var(--card)";
+  }
+}
+function gradeSet(){
+  const s=curSet;if(!s)return;
+  s.__graded=true;
+  let ok=0;
+  s.questions.forEach(function(q,qi){
+    const pick=setPicks[qi];
+    for(var c=0;c<q.choices.length;c++){
+      const b=document.getElementById("c_"+qi+"_"+c);b.style.background="var(--card)";
+      if(c===q.ans)b.classList.add("ok");
+      if(pick===c&&pick!==q.ans)b.classList.add("ng");
+    }
+    if(pick===q.ans)ok++;
+    const exp=document.getElementById("exp_"+qi);
+    let e='<b>正解 '+String.fromCharCode(65+q.ans)+'</b>'+(pick==null?'（未選択）':pick===q.ans?'　✓':'　✗ あなた:'+String.fromCharCode(65+pick));
+    if(q.exp)e+='\n'+esc(q.exp);
+    exp.innerHTML=e;exp.classList.add("show");
+  });
+  // スクリプト表示 (Part3/4)
+  if(s.part!==7&&s.transcript){
+    const sc=document.createElement("div");sc.className="passage";sc.style.marginTop="14px";
+    sc.innerHTML='<b>スクリプト</b>\n'+esc(s.transcript);
+    document.getElementById("setScore").appendChild(sc);
+  }
+  const sl=document.createElement("div");sl.className="scoreline";sl.textContent="スコア "+ok+" / "+s.questions.length;
+  document.getElementById("setScore").insertBefore(sl,document.getElementById("setScore").firstChild);
+  // 記録
+  if(!S.prac)S.prac={};S.prac[s.id]={ok:ok,n:s.questions.length,d:today()};
+  const lg=logToday();lg.tot+=s.questions.length;lg.ok+=ok;
+  save();
+  document.getElementById("gradeBtn").style.display="none";
+  // 単語登録UI
+  const reg=document.createElement("div");reg.className="card";reg.style.marginTop="12px";
+  reg.innerHTML='<h2>知らなかった単語を登録</h2>'
+    +'<div class="note">ここで登録した語は「単語」タブの学習・苦手一覧・復習に合流します。</div>'
+    +'<div class="wreg"><div class="rowin">'
+    +'<input id="wrW" placeholder="単語 (例: itinerary)">'
+    +'<select id="wrP"><option>名</option><option>動</option><option>形</option><option>副</option><option>熟</option></select>'
+    +'</div><input id="wrM" style="margin-top:6px" placeholder="意味 (例: 旅程表)">'
+    +'<button class="sec" style="margin-top:8px" onclick="addCustomWord()">登録する</button>'
+    +'<div id="wrList"></div></div>';
+  document.getElementById("pracRun").firstChild.appendChild(reg);
+  renderWrList();
+  window.scrollTo(0,0);
+}
+function addCustomWord(){
+  const w=(document.getElementById("wrW").value||"").trim();
+  const p=document.getElementById("wrP").value;
+  const m=(document.getElementById("wrM").value||"").trim();
+  if(!w||!m){alert("単語と意味を入力してください");return}
+  if(!S.custom)S.custom=[];
+  if(S.custom.some(function(c){return c.w.toLowerCase()===w.toLowerCase()})){alert("すでに登録済みです");return}
+  S.custom.push({w:w,pos:p,mean:m,src:curSet?curSet.id:""});
+  rebuildWB();save();
+  document.getElementById("wrW").value="";document.getElementById("wrM").value="";
+  renderWrList();
+}
+function renderWrList(){
+  const el=document.getElementById("wrList");if(!el)return;
+  const src=curSet?curSet.id:"";
+  const mine=(S.custom||[]).filter(function(c){return c.src===src});
+  el.innerHTML=mine.length?('<div style="margin-top:8px">'+mine.map(function(c){return '<span class="wchip"><b>'+esc(c.w)+'</b> '+esc(c.mean)+'</span>'}).join("")+'</div>'):'';
+}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 // ===== カウントダウン =====
 function countdown(){
   const now=new Date(),exam=new Date(EXAM+"T00:00:00");
   const days=Math.ceil((exam-now)/86400000);
   document.getElementById("countdown").textContent=days>0?"8/23まで あと"+days+"日":days===0?"本番当日":"試験終了";
 }
-countdown();renderHome();fbInit();
+rebuildWB();countdown();renderHome();fbInit();
 if(location.protocol==="https:"&&"serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}
 </script>
 </body>
