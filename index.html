@@ -1122,6 +1122,13 @@ function gradeSet(){
     sc.innerHTML='<b>スクリプト</b>\n'+esc(s.transcript);
     document.getElementById("setScore").appendChild(sc);
   }
+  // 和訳（折りたたみ・任意）
+  if(s.trans&&s.trans.length){
+    const tb=document.createElement("div");tb.style.marginTop="10px";
+    tb.innerHTML='<button class="sec" id="transToggle" onclick="toggleTrans()">和訳を表示 ▼</button>'
+      +'<div id="transBox" style="display:none">'+s.trans.map(function(p,i){return '<div class="passage">'+(s.trans.length>1?'<b>[文書'+(i+1)+' 和訳]</b>\n':'<b>和訳</b>\n')+esc(p)+'</div>'}).join("")+'</div>';
+    document.getElementById("setScore").appendChild(tb);
+  }
   const sl=document.createElement("div");sl.className="scoreline";sl.textContent="スコア "+ok+" / "+s.questions.length;
   document.getElementById("setScore").insertBefore(sl,document.getElementById("setScore").firstChild);
   // 記録
@@ -1162,6 +1169,7 @@ function renderWrList(){
   el.innerHTML=mine.length?('<div style="margin-top:8px">'+mine.map(function(c){return '<span class="wchip"><b>'+esc(c.w)+'</b> '+esc(c.mean)+'</span>'}).join("")+'</div>'):'';
 }
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function toggleTrans(){var b=document.getElementById("transBox"),t=document.getElementById("transToggle");if(!b)return;var show=(b.style.display==="none");b.style.display=show?"":"none";if(t)t.textContent=show?"和訳を隠す ▲":"和訳を表示 ▼";}
 // ===== カウントダウン =====
 function countdown(){
   const now=new Date(),exam=new Date(EXAM+"T00:00:00");
